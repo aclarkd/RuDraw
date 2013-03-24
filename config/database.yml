@@ -1,0 +1,18 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: aclark
+  pool: 5
+  username: aclark
+  password: 2646comp8061
+  host: localhost
+
+production:
+  adapter: postgresql
+  encoding: unicode
+  database: aclark
+  pool: 5
+  username: aclark
+  password: 2646comp8061
+  host: localhost
+
