@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <script>
+
+      var dispatcher = new WebSocketRails('haskell.bcit.ca:8112/websocket');
+
+      dispatcher.bind('client_connecetd', function(data) {
+        console.log(data.message);
+      });
+
+      dispatcher.on_open = function(data) {
+        console.log('Connection has been established: ' + data);
+      }
+ 
+      dispatcher.bind('recieve_coordinates', function(data) {
+        console.log(data.message);
+      });
+
+    </script>
+  </head>
+  <body>
+    <div>
+        <canvas id="canvas" width="500" height="400"
+                style="border:1px solid #000000;">
+        </canvas>
+    </div>
+    <script type="text/javascript">
+		$(document).ready(function() {
+			draw.startDrawing($('#canvas'), dispatcher);
+		});
+    </script>
+
+    <input type="button" onClick="sendMessage()" value="Message">
+    
+    <div id="debug"></div>
+    <div id="msg"></div>
+  </body>
+</html>

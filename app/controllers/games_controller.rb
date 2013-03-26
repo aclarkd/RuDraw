@@ -80,4 +80,10 @@ class GamesController < ApplicationController
       format.json { head :no_content }
     end
   end
+
+  # GET /games/1/play
+  def play
+    @game = Game.find(params[:id])
+  end
+
 end

@@ -36,4 +36,6 @@ Draw::Application.configure do
   config.assets.debug = true
 
   config.action_mailer.default_url_options = { :host => 'haskell.bcit.ca:8112' }
+
+  config.middleware.delete Rack::Lock
 end
