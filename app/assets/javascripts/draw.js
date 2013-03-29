@@ -25,6 +25,19 @@ var draw = {
         draw.canvas[0].addEventListener('mousemove', this.__onMouseMove, false);
         draw.canvas[0].addEventListener('mouseup', this.__onMouseUp, false);
         draw.canvas[0].addEventListener('mouseleave', this.__onMouseLeave, false);
+
+        this.bindDispatcherEvents();
+    },
+
+    bindDispatcherEvents: function (){
+        dispatcher.bind('recieve_coordinates', function(data) {
+            var xy = data.message;
+            draw.drawLine(draw.context, xy.x, xy.x1, xy.y, xy.y1);
+        });
+
+   //     dispatcher.bind('recieve_clear', function(data) {
+   //         draw.clear();
+   //     });
     },
 
     __onMouseDown: function (e) {
@@ -34,7 +47,6 @@ var draw = {
     },
 
     __onMouseUp: function (e) {
-        //draw.drawMultiPointLine(draw.context2 , draw.lineX, draw.lineY);
         draw.lineX = [];
         draw.lineY = [];
         draw.mouseDown = false;
@@ -50,13 +62,22 @@ var draw = {
                 x1 = draw.lineX.last();
                 y1 = draw.lineY.last();
                 draw.drawLine(draw.context, x, x1, y, y1);
-                var message = { x:x1, x1:x1, y:y, y1:y1 };
+                var message = { x:x, x1:x1, y:y, y1:y1 };
                 draw.dispatcher.trigger('broadcast_coordinates', message);
             }
 
             draw.lineX.push(x);
             draw.lineY.push(y);
         }
+    },
+
+    broadcastClear: function(){
+     //   var message = { x:x, x1:x1, y:y, y1:y1 };
+     //   draw.dispatcher.trigger('broadcast_coordinates', message);
+    },
+
+    clear: function(){
+     //   draw.context.clearRect(x, y, w, h);
     },
 
     __onMouseLeave: function(){

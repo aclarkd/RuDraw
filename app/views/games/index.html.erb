@@ -8,16 +8,31 @@
     <th></th>
   </tr>
 
+<div id="user_navigation">
+  <% if user_signed_in? %>
+    Signed in as <%= current_user.email %> <%= link_to "Sign Out", destroy_user_session_path, :method => :delete %>
+  <% else %>
+    <%= link_to "Sign up", new_user_registration_path %> or <%= link_to "Sign in", new_user_session_path %>
+  <% end %>
+</div>
+
+
+
 <% @games.each do |game| %>
   <tr>
     <td><%= game.name %></td>
+    <td><%= link_to 'Play', play_path(game) %></td>
+    <% if user_signed_in? %>    
     <td><%= link_to 'Show', game %></td>
     <td><%= link_to 'Edit', edit_game_path(game) %></td>
     <td><%= link_to 'Destroy', game, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+    <% end %>
   </tr>
 <% end %>
 </table>
 
 <br />
 
-<%= link_to 'New Game', new_game_path %>
+<% if user_signed_in? %>
+    <%= link_to 'New Game', new_game_path %>
+<% end %>
