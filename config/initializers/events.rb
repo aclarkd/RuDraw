@@ -3,7 +3,7 @@ WebsocketRails.setup do |config|
   # Uncomment to override the default log level. The log level can be
   # any of the standard Logger log levels. By default it will mirror the
   # current Rails environment log level.
-  # config.log_level = :debug
+   config.log_level = :debug
 
   # Uncomment to change the default log file path.
   # config.log_path = "#{Rails.root}/log/websocket_rails.log"
@@ -30,8 +30,16 @@ end
 
 WebsocketRails::EventMap.describe do
 
-  subscribe :client_connected, to: SocketController, with_method: :client_connected
   subscribe :broadcast_coordinates, to: SocketController, with_method: :broadcast_coordinates
+  subscribe :broadcast_clear_canvas, to: SocketController, with_method: :broadcast_clear_canvas
+
+  subscribe :client_connected, to: SocketController, with_method: :register_connection
+  subscribe :client_disconnected, :to => SocketController, :with_method => :unregister_connection
+
+  subscribe :accept_presenter, :to => SocketController, :with_method => :accept_presenter
+
+  subscribe :test, to: SocketController, with_method: :test
+
   # You can use this file to map incoming events to controller actions.
   # One event can be mapped to any number of controller actions. The
   # actions will be executed in the order they were subscribed.

@@ -2,16 +2,19 @@
   <head>
     <script>
 
-      var dispatcher = new WebSocketRails('haskell.bcit.ca:8112/websocket');
+      var dispatcher = new WebSocketRails('haskell.bcit.ca:8112/websocket'); // connect to socket
+      //var channel = dispatcher.subscribe('<%= @game.name %>');
+/*
+      var channel = dispatcher.subscribe('channel_test');
 
-      dispatcher.bind('client_connecetd', function(data) {
-        console.log(data.message);
+      dispatcher.bind('receive_test', function(data) {
+          console.log('channel event received: ' + data);
       });
 
-      dispatcher.on_open = function(data) {
-        console.log('Connection has been established: ' + data);
-      }
- 
+      var message = { x:1, x1:2, y:3, y1:4 };
+      dispatcher.trigger('channel_test', message);
+*/
+
     </script>
   </head>
   <body>
@@ -21,14 +24,13 @@
         </canvas>
     </div>
     <script type="text/javascript">
-		$(document).ready(function() {
-			draw.startDrawing($('#canvas'), dispatcher);
-		});
+        $(document).ready(function() {
+            draw.startDrawing($('#canvas'), dispatcher);
+        });
     </script>
+    <div><%= @game.name %> <%= link_to 'Back', games_path %></div>
+    <input type="button" onclick="draw.clear();" value="Clear">
+    <input type="button" onclick="draw.test();" value="Test">
 
-<!--    <input type="button" onClick="draw.clear()" value="Clear"> -->
-    
-    <div id="debug"></div>
-    <div id="msg"></div>
   </body>
 </html>
