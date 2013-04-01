@@ -12,6 +12,8 @@ var draw = {
     channel : null,
     connectionId: null,
     presenter: false,
+    time: 0,
+    clock: null,
 
     startDrawing: function (c, d) {
         draw = this,
@@ -32,12 +34,12 @@ var draw = {
 
     bindChannelEvents: function (){
         // connection management
-        draw.channel.on_open = function(data) {
-            draw.channel.trigger('register_connection', data);
-        }
-
         draw.channel.bind('client_connected', function(data) {
             draw.connectionId = data.connection_id;
+        });
+
+        draw.channel.bind('client_disconnected', function(data) {
+            console.log('someone left', data);
         });
 
         // canvas controls
@@ -52,27 +54,48 @@ var draw = {
 
         // game state controls
         draw.channel.bind('receive_presenter', function(data) {
-            draw.acceptPresenter(data.presenter_id);
+            draw.acceptPresenter(); // send acceptance message
+        });
+
+        draw.channel.bind('receive_time', function(data) {
+            console.log('start timer')
+            draw.time = data.time;
+            draw.clock = setInterval(draw.checkTime, 1000);
+        });
+
+        draw.channel.bind('receive_item_to_draw', function(data) {
+            draw.presenter = true;
+            console.log('item', data.item);
         });
 
         draw.channel.bind('test', function(data) {
-            console.log(data.message, draw.presenter);
+            console.log(data, draw.connectionId);
         });
     },
 
-    acceptPresenter: function(presenter_id){
-        var message = { connection_id : presenter_id };
-        draw.channel.trigger('accept_presenter', message); // accept the presenter role
-        if(presenter_id == draw.connectionId){
-            draw.presenter = true;
+    checkTime: function(){
+        draw.time--;
+        console.log(draw.time);
+        if(draw.time == 0){
+            console.log('times up');
+            clearInterval(draw.clock);
         }
-        console.log('presenter ', presenter_id);
+    },
+
+    acceptPresenter: function(){
+        draw.presenter = false;
+        var message = { connection_id : draw.connectionId };
+        draw.channel.trigger('accept_presenter', message); // accept the presenter role
+    },
+
+    disconnect: function(){
+        var message = { connection_id : draw.connectionId };
+        draw.channel.trigger('client_disconnected', message);
     },
 
     test: function(){
-        var message = {};
+        var message = { connection_id : draw.connectionId };
         draw.channel.trigger('test', message); // clear all canvases
-        console.log('me', draw.connectionId);
     },
 
     __onMouseDown: function (e) {
@@ -97,7 +120,7 @@ var draw = {
                 x1 = draw.lineX[draw.lineX.length-1];
                 y1 = draw.lineY[draw.lineY.length-1];
                 draw.drawLine(draw.context, x, x1, y, y1);
-                var message = { x:x, x1:x1, y:y, y1:y1 };
+                var message = { connection_id : draw.connectionId, x:x, x1:x1, y:y, y1:y1 };
                 draw.channel.trigger('broadcast_coordinates', message); // send new line to server
             }
 
@@ -107,7 +130,7 @@ var draw = {
     },
 
     clear: function(){
-        var message = {};
+        var message = { connection_id : draw.connectionId };
         draw.channel.trigger('broadcast_clear_canvas', message); // clear all canvases
     },
 

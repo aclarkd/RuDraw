@@ -26,6 +26,9 @@
     <script type="text/javascript">
         $(document).ready(function() {
             draw.startDrawing($('#canvas'), dispatcher);
+            window.onbeforeunload = function() {
+                draw.disconnect();
+            };
         });
     </script>
     <div><%= @game.name %> <%= link_to 'Back', games_path %></div>
