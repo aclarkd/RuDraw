@@ -4,6 +4,7 @@ class SocketController < WebsocketRails::BaseController
     controller_store[:connected] = []
     controller_store[:current_presenter] = 0
     controller_store[:requested_presenter] = 0
+    controller_store[:current_item] = ''
     controller_store[:timer] = 60
   end
 
@@ -25,20 +26,31 @@ class SocketController < WebsocketRails::BaseController
   end
 
   # game state management
-  def broadcast_presenter # ask random client to become presenter, on return of acceptance client will be sent item to draw
-    presenter_id = controller_store[:connected].sample
+  def broadcast_presenter(presenter_id = false) # ask random client to become presenter, on return of acceptance client will be sent item to draw
+    presenter_id = presenter_id || controller_store[:connected].sample
     controller_store[:requested_presenter] = presenter_id
     broadcast_message :receive_presenter, { }
   end
 
+  # acknowledge presenter, send item to draw, start timer
   def accept_presenter
     if message[:connection_id] == controller_store[:requested_presenter] # only requested presenter may accept
       controller_store[:current_presenter] = message[:connection_id]
-      send_message :receive_item_to_draw, { :item => 'dog' }
-      broadcast_message :receive_time, { :time => controller_store[:timer] }
+      controller_store[:current_item] = 'dog'
+      send_message :receive_item_to_draw, { :item => controller_store[:current_item] }
+      broadcast_time
     end
   end
 
+  # receive guess from player, promote to presenter if its correct
+  def guess
+    if controller_store[:current_presenter] != message[:connection_id] and controller_store[:current_item] == message[:guess]
+      broadcast_clear_canvas
+      broadcast_presenter message[:connection_id]
+    end
+  end
+
+  # start the timer
   def broadcast_time
     broadcast_message :receive_time, { :time => controller_store[:timer] }
   end
@@ -50,6 +62,7 @@ class SocketController < WebsocketRails::BaseController
     end
   end
 
+  # clear all canvases
   def broadcast_clear_canvas
     if is_presenter message[:connection_id] #only presenter can clear
       broadcast_message :receive_clear, { :message => message }

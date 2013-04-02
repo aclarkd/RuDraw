@@ -18,22 +18,63 @@
     </script>
   </head>
   <body>
+
     <div>
-        <canvas id="canvas" width="500" height="400"
-                style="border:1px solid #000000;">
-        </canvas>
-    </div>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            draw.startDrawing($('#canvas'), dispatcher);
-            window.onbeforeunload = function() {
-                draw.disconnect();
+
+        <div id="heading"><h1>Waiting for players</h1></div>
+        <div class="navigation"><%= @game.name %> | <%= link_to 'Lobby', games_path %></div>
+
+        <div>
+            <canvas id="canvas" width="500" height="400"
+                    style="border:1px solid #000000;">
+            </canvas>
+        </div>
+        <script type="text/javascript">
+
+            var toggleMode = function(mode, item){
+                if(mode == 'presenter'){
+                    $('#heading').html("<h1>Draw a " + item + "</h1>");
+                    $('.presenter').show();
+                    $('.player').hide();
+                    $('.waiting').hide();
+                } else if(mode == 'player') {
+                    $('#heading').html("<h1>What is it?</h1>");
+                    $('.player').show();
+                    $('.presenter').hide();
+                    $('.waiting').hide();
+                } else {
+                    $('#heading').html("<h1>Waiting for players</h1>");
+                    $('.waiting').show();
+                    $('.presenter').hide();
+                    $('.player').hide();
+                }
             };
-        });
-    </script>
-    <div><%= @game.name %> <%= link_to 'Back', games_path %></div>
-    <input type="button" onclick="draw.clear();" value="Clear">
-    <input type="button" onclick="draw.test();" value="Test">
+            $(document).ready(function() {
+                $('#guessInput').keyup(function(event){
+                    if(event.keyCode == 13){
+                        draw.guess($('#guessInput').val());
+                    }
+                });
+
+                draw.startDrawing($('#canvas'), dispatcher, toggleMode);
+                window.onbeforeunload = function() {
+                    draw.disconnect();
+                };
+            });
+        </script>
+
+        <div class="presenter" style="display:none">
+            <input id="clearButton" type="button" onclick="draw.clear();" value="Clear">
+        </div>
+
+        <div class="player" style="display:none">
+            <input id="guessInput" type="text" name="guess">
+            <input class="player" id="guessButton" type="button" onclick="draw.guess($('#guessInput').val());" value="Guess">
+        </div>
+
+        <!-- <input type="button" onclick="draw.test();" value="Test"> -->
+
+    </div>
 
   </body>
 </html>

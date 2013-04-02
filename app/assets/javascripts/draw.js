@@ -11,14 +11,15 @@ var draw = {
     co : 7, // cursor offset
     channel : null,
     connectionId: null,
-    presenter: false,
+    mode: null, // display mode
     time: 0,
     clock: null,
 
-    startDrawing: function (c, d) {
+    startDrawing: function (c, d, mode) {
         draw = this,
         draw.canvas = c[0];
         draw.channel = d;
+        draw.mode = mode;
         draw.context = c[0].getContext("2d");
 
         // attach event listeners
@@ -26,7 +27,6 @@ var draw = {
         draw.canvas.addEventListener('mousemove', this.__onMouseMove, false);
         draw.canvas.addEventListener('mouseup', this.__onMouseUp, false);
         draw.canvas.addEventListener('mouseleave', this.__onMouseLeave, false);
-
         draw.canvas.onselectstart = function () { return false; } // disable i-beam cursor on drag
 
         this.bindChannelEvents();
@@ -54,18 +54,24 @@ var draw = {
 
         // game state controls
         draw.channel.bind('receive_presenter', function(data) {
-            draw.acceptPresenter(); // send acceptance message
+            draw.mode('player');
+            var message = { connection_id : draw.connectionId };
+            draw.channel.trigger('accept_presenter', message); // send acceptance message
         });
 
         draw.channel.bind('receive_time', function(data) {
-            console.log('start timer')
             draw.time = data.time;
             draw.clock = setInterval(draw.checkTime, 1000);
         });
 
         draw.channel.bind('receive_item_to_draw', function(data) {
-            draw.presenter = true;
-            console.log('item', data.item);
+            draw.mode('presenter', data.item);
+        });
+
+        draw.channel.bind('receive_guess', function(data) {
+            draw.mode('player');
+            var message = { connection_id : draw.connectionId };
+            draw.channel.trigger('accept_presenter', message); // send acceptance message
         });
 
         draw.channel.bind('test', function(data) {
@@ -73,19 +79,17 @@ var draw = {
         });
     },
 
+    guess: function(guess){
+        var message = { guess: guess, connection_id: draw.connectionId }
+        draw.channel.trigger('guess', message);
+    },
+
     checkTime: function(){
         draw.time--;
-        console.log(draw.time);
         if(draw.time == 0){
             console.log('times up');
             clearInterval(draw.clock);
         }
-    },
-
-    acceptPresenter: function(){
-        draw.presenter = false;
-        var message = { connection_id : draw.connectionId };
-        draw.channel.trigger('accept_presenter', message); // accept the presenter role
     },
 
     disconnect: function(){
@@ -98,10 +102,31 @@ var draw = {
         draw.channel.trigger('test', message); // clear all canvases
     },
 
+    getCursorPosition: function(e) {
+        var x;
+        var y;
+        if (e.pageX || e.pageY) {
+            x = e.pageX;
+            y = e.pageY;
+        }
+        else {
+            x = e.clientX + document.body.scrollLeft +
+                document.documentElement.scrollLeft;
+            y = e.clientY + document.body.scrollTop +
+                document.documentElement.scrollTop;
+        }
+
+        x -= draw.canvas.offsetLeft;
+        y -= draw.canvas.offsetTop;
+
+        return { x:x, y:y }
+    },
+
     __onMouseDown: function (e) {
-		draw.mouseDown = true;
-		draw.lineX.push(e.offsetX-draw.cursorOffset);
-		draw.lineY.push(e.offsetY-draw.cursorOffset);
+        draw.mouseDown = true;
+        p = draw.getCursorPosition(e);
+        draw.lineX.push(p.x);
+        draw.lineY.push(p.y);
     },
 
     __onMouseUp: function (e) {
@@ -111,21 +136,19 @@ var draw = {
     },
 
     __onMouseMove: function (e) {
-	if(draw.mouseDown){
-            x = e.x-draw.co;
-            y = e.y-draw.co;
-
+        if(draw.mouseDown){
+            p = draw.getCursorPosition(e);
             draw.lines++;
             if(draw.lineX.length > 1){
                 x1 = draw.lineX[draw.lineX.length-1];
                 y1 = draw.lineY[draw.lineY.length-1];
-                draw.drawLine(draw.context, x, x1, y, y1);
-                var message = { connection_id : draw.connectionId, x:x, x1:x1, y:y, y1:y1 };
+                draw.drawLine(draw.context, p.x, x1, p.y, y1);
+                var message = { connection_id : draw.connectionId, x: p.x, x1:x1, y: p.y, y1:y1 };
                 draw.channel.trigger('broadcast_coordinates', message); // send new line to server
             }
 
-            draw.lineX.push(x);
-            draw.lineY.push(y);
+            draw.lineX.push(p.x);
+            draw.lineY.push(p.y);
         }
     },
 
