@@ -20,7 +20,9 @@ class SocketController < WebsocketRails::BaseController
     controller_store[:connected].delete(message[:connection_id])
     if controller_store[:current_presenter] == message[:connection_id]
       controller_store[:current_presenter] = 0
-      broadcast_presenter
+      if controller_store[:connected].length > 1 # set new presenter if 2 or more players
+        broadcast_presenter
+      end
     end
     broadcast_message :client_disconnected, { :connection_id => message[:connection_id] }
   end
@@ -48,6 +50,7 @@ class SocketController < WebsocketRails::BaseController
       broadcast_clear_canvas
       broadcast_presenter message[:connection_id]
     end
+    broadcast_message :guess
   end
 
   # start the timer

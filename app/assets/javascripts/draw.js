@@ -11,15 +11,16 @@ var draw = {
     co : 7, // cursor offset
     channel : null,
     connectionId: null,
-    mode: null, // display mode
+    interface: null, // interface observable
+    presenter: false, // ensure players cannot perform presenter actions, socket controller will verify for as well for security
     time: 0,
     clock: null,
 
-    startDrawing: function (c, d, mode) {
+    startDrawing: function (c, d, interface) {
         draw = this,
         draw.canvas = c[0];
         draw.channel = d;
-        draw.mode = mode;
+        draw.interface = interface;
         draw.context = c[0].getContext("2d");
 
         // attach event listeners
@@ -54,7 +55,9 @@ var draw = {
 
         // game state controls
         draw.channel.bind('receive_presenter', function(data) {
-            draw.mode('player');
+            clearInterval(draw.clock);
+            draw.interface.trigger('player'); // set all connected players to player interface
+            draw.presenter = false;
             var message = { connection_id : draw.connectionId };
             draw.channel.trigger('accept_presenter', message); // send acceptance message
         });
@@ -65,17 +68,8 @@ var draw = {
         });
 
         draw.channel.bind('receive_item_to_draw', function(data) {
-            draw.mode('presenter', data.item);
-        });
-
-        draw.channel.bind('receive_guess', function(data) {
-            draw.mode('player');
-            var message = { connection_id : draw.connectionId };
-            draw.channel.trigger('accept_presenter', message); // send acceptance message
-        });
-
-        draw.channel.bind('test', function(data) {
-            console.log(data, draw.connectionId);
+            draw.interface.trigger('presenter', data.item);
+            draw.presenter = true;
         });
     },
 
@@ -86,9 +80,10 @@ var draw = {
 
     checkTime: function(){
         draw.time--;
-        if(draw.time == 0){
-            console.log('times up');
+        draw.interface.trigger('update_time', draw.time);
+        if(draw.time <= 0){
             clearInterval(draw.clock);
+            //draw.clock = setInterval(draw.checkTime, 1000);
         }
     },
 
@@ -123,6 +118,9 @@ var draw = {
     },
 
     __onMouseDown: function (e) {
+        if(!draw.presenter){
+            draw.interface.trigger('guess_reminder');
+        }
         draw.mouseDown = true;
         p = draw.getCursorPosition(e);
         draw.lineX.push(p.x);
@@ -136,7 +134,7 @@ var draw = {
     },
 
     __onMouseMove: function (e) {
-        if(draw.mouseDown){
+        if(draw.mouseDown && draw.presenter){
             p = draw.getCursorPosition(e);
             draw.lines++;
             if(draw.lineX.length > 1){

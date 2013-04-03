@@ -19,36 +19,32 @@
   </head>
   <body>
 
-    <div>
+    <div class="content">
 
-        <div id="heading"><h1>Waiting for players</h1></div>
-        <div class="navigation"><%= @game.name %> | <%= link_to 'Lobby', games_path %></div>
-
-        <div>
-            <canvas id="canvas" width="500" height="400"
-                    style="border:1px solid #000000;">
-            </canvas>
+        <div class="navigation">Currently In Game <%= @game.name %>
+          <% if user_signed_in? %>
+            as <%= current_user.username %>
+          <% else %>
+            Guest
+          <% end %> | <%= link_to 'Lobby', games_path %>
         </div>
-        <script type="text/javascript">
 
-            var toggleMode = function(mode, item){
-                if(mode == 'presenter'){
-                    $('#heading').html("<h1>Draw a " + item + "</h1>");
-                    $('.presenter').show();
-                    $('.player').hide();
-                    $('.waiting').hide();
-                } else if(mode == 'player') {
-                    $('#heading').html("<h1>What is it?</h1>");
-                    $('.player').show();
-                    $('.presenter').hide();
-                    $('.waiting').hide();
-                } else {
-                    $('#heading').html("<h1>Waiting for players</h1>");
-                    $('.waiting').show();
-                    $('.presenter').hide();
-                    $('.player').hide();
-                }
-            };
+        <div id="title_bar">
+            <span id="title">Waiting for players...</span>
+            <span id="clock">60</span>
+        </div>
+
+        <div class="canvas">
+            <canvas id="canvas" width="500" height="400" style="border:1px solid #000000;"></canvas>
+        </div>
+
+        <div id="interface"></div>
+
+        <div id="messages">
+
+        </div>
+
+        <script type="text/javascript">
             $(document).ready(function() {
                 $('#guessInput').keyup(function(event){
                     if(event.keyCode == 13){
@@ -56,24 +52,52 @@
                     }
                 });
 
-                draw.startDrawing($('#canvas'), dispatcher, toggleMode);
+                // interface events captured to render correct play state
+                $('#interface').on('presenter', function(event, item) {
+                    $('#title').html("Draw a " + item + "");
+                    $('#messages').append("<div>Your turn to draw!</div>");
+                    $('.presenter').show();
+                    $('.player').hide();
+                    $('.waiting').hide();
+                });
+
+                $('#interface').on('player', function() {
+                    $('#title').html("What is it?");
+                    $('.player').show();
+                    $('.presenter').hide();
+                    $('.waiting').hide();
+                });
+
+                $('#interface').on('waiting', function() {
+                    $('#title').html("Waiting for players...");
+                    $('.waiting').show();
+                    $('.presenter').hide();
+                    $('.player').hide();
+                });
+
+                $('#interface').on('update_time', function(event, time) {
+                    $('#clock').html(time);
+                });
+
+                draw.startDrawing($('#canvas'), dispatcher, $('#interface'));
                 window.onbeforeunload = function() {
                     draw.disconnect();
                 };
             });
         </script>
 
-        <div class="presenter" style="display:none">
-            <input id="clearButton" type="button" onclick="draw.clear();" value="Clear">
+        <div class="control_bar presenter" style="display:none">
+            <div>
+                <input id="clearButton" type="button" onclick="draw.clear();" value="Clear">
+            </div>
         </div>
 
-        <div class="player" style="display:none">
-            <input id="guessInput" type="text" name="guess">
-            <input class="player" id="guessButton" type="button" onclick="draw.guess($('#guessInput').val());" value="Guess">
+        <div class="control_bar player" style="display:none">
+            <div>
+                Enter your guess : <input id="guessInput" type="text" name="guess">
+                <input class="player" id="guessButton" type="button" onclick="draw.guess($('#guessInput').val());" value="Guess">
+            </div>
         </div>
-
-        <!-- <input type="button" onclick="draw.test();" value="Test"> -->
-
     </div>
 
   </body>

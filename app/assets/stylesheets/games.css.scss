@@ -5,3 +5,47 @@
 #canvas {
     cursor:crosshair
 }
+
+.canvas {
+   float:left;
+   margin: 10px 10px 0px 0px;
+ }
+
+.content {
+  width: 800px;
+  height: 800px;
+  margin: 10px 10px 10px 10px;
+ }
+
+.messages {
+  float: left;
+}
+
+.control_bar {
+  width: 800px;
+  float: left;
+}
+
+#title_bar {
+  margin: 10px 10px 0px 0px;
+  font-size:20px;
+  width: 800px;
+}
+
+.title {
+  float: left;
+}
+
+.clock {
+  float: left;
+}
+
+#messages {
+  border: 1px solid black;
+  padding: 0px 0px 0px 5px;
+  margin: 10px 0px 0px 0px;
+  float: left;
+  overflow: auto;
+  width: 275px;
+  height: 400px;
+}

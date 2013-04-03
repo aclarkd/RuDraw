@@ -39,6 +39,4 @@ WebsocketRails::EventMap.describe do
   subscribe :accept_presenter, :to => SocketController, :with_method => :accept_presenter
   subscribe :guess, :to => SocketController, :with_method => :guess
 
-  subscribe :test, to: SocketController, with_method: :test
-
 end
