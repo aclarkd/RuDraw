@@ -1,4 +1,7 @@
 Draw::Application.routes.draw do
+  resources :drawables
+
+
   devise_for :users
 
   resources :games

@@ -1,0 +1,15 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Name:</b>
+  <%= @drawable.name %>
+</p>
+
+<p>
+  <b>Score:</b>
+  <%= @drawable.score %>
+</p>
+
+
+<%= link_to 'Edit', edit_drawable_path(@drawable) %> |
+<%= link_to 'Back', drawables_path %>

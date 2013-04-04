@@ -1,0 +1,29 @@
+<div class="navigation">Listing drawables | <%= link_to 'Lobby', games_path %></div>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Score</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @drawables.each do |drawable| %>
+  <tr>
+    <td><%= drawable.name %></td>
+    <td><%= drawable.score %></td>
+    <% if user_signed_in? %>
+        <td><%= link_to 'Show', drawable %></td>
+        <td><%= link_to 'Edit', edit_drawable_path(drawable) %></td>
+        <td><%= link_to 'Destroy', drawable, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+    <% end %>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<% if user_signed_in? %>
+    <%= link_to 'New Drawable', new_drawable_path %>
+<% end %>

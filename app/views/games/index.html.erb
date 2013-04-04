@@ -21,9 +21,9 @@
     <td><%= game.name %></td>
     <td><%= link_to 'Play', play_path(game) %></td>
     <% if user_signed_in? %>    
-    <td><%= link_to 'Show', game %></td>
-    <td><%= link_to 'Edit', edit_game_path(game) %></td>
-    <td><%= link_to 'Destroy', game, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <td><%= link_to 'Show', game %></td>
+        <td><%= link_to 'Edit', edit_game_path(game) %></td>
+        <td><%= link_to 'Destroy', game, method: :delete, data: { confirm: 'Are you sure?' } %></td>
     <% end %>
   </tr>
 <% end %>
@@ -32,5 +32,5 @@
 <br />
 
 <% if user_signed_in? %>
-    <%= link_to 'New Game', new_game_path %>
+    <%= link_to 'New Game', new_game_path %> | <%= link_to 'New Drawable', new_drawable_path %>
 <% end %>

@@ -37,6 +37,8 @@ WebsocketRails::EventMap.describe do
   subscribe :client_disconnected, :to => SocketController, :with_method => :client_disconnected
 
   subscribe :accept_presenter, :to => SocketController, :with_method => :accept_presenter
+
   subscribe :guess, :to => SocketController, :with_method => :guess
+  subscribe :timer_expired, :to => SocketController, :with_method => :timer_expired
 
 end

@@ -4,16 +4,6 @@
 
       var dispatcher = new WebSocketRails('haskell.bcit.ca:8112/websocket'); // connect to socket
       //var channel = dispatcher.subscribe('<%= @game.name %>');
-/*
-      var channel = dispatcher.subscribe('channel_test');
-
-      dispatcher.bind('receive_test', function(data) {
-          console.log('channel event received: ' + data);
-      });
-
-      var message = { x:1, x1:2, y:3, y1:4 };
-      dispatcher.trigger('channel_test', message);
-*/
 
     </script>
   </head>
@@ -40,9 +30,8 @@
 
         <div id="interface"></div>
 
-        <div id="messages">
-
-        </div>
+        <!--<div id="score"></div>-->
+        <div id="messages"></div>
 
         <script type="text/javascript">
             $(document).ready(function() {
@@ -53,9 +42,11 @@
                 });
 
                 // interface events captured to render correct play state
+
                 $('#interface').on('presenter', function(event, item) {
                     $('#title').html("Draw a " + item + "");
-                    $('#messages').append("<div>Your turn to draw!</div>");
+                    $('#messages').append("<div>Your turn to draw</div>");
+                    $('#messages').trigger('change');
                     $('.presenter').show();
                     $('.player').hide();
                     $('.waiting').hide();
@@ -63,9 +54,12 @@
 
                 $('#interface').on('player', function() {
                     $('#title').html("What is it?");
+                    $('#messages').append("<div>Your turn to guess</div>");
+                    $('#messages').trigger('change');
                     $('.player').show();
                     $('.presenter').hide();
                     $('.waiting').hide();
+                    $('#guessInput').focus();
                 });
 
                 $('#interface').on('waiting', function() {
@@ -76,12 +70,42 @@
                 });
 
                 $('#interface').on('update_time', function(event, time) {
+                    if(time <= 0){
+                        $('#messages').append("<div>No one got it</div>");
+                        $('#messages').trigger('change');
+                    }
                     $('#clock').html(time);
+                });
+
+                $('#interface').on('guess', function(event, data) {
+                    if(data.correct) {
+                        $('#messages').append("<div>" + data.user + " guessed it " + data.guess + "</div>");
+                    } else {
+                        $('#messages').append("<div>" + data.user + " guessed " + data.guess + ", nope try again</div>");
+                    }
+                    $('#messages').trigger('change');
+                });
+
+                $('#interface').on('update_scores', function(event, data) {
+                    // work in progress
+                });
+
+                $('#interface').on('guess_reminder', function(event, data) {
+                    $('#messages').append("<div>You're supposed to be guessing</div>");
+                    $('#messages').trigger('change');
+                });
+
+                $('#interface').on('clear_guess', function() {
+                    $('#guessInput').val('');
+                });
+
+                $('#messages').change(function (){
+                    $('#messages').scrollTop($('#messages')[0].scrollHeight);
                 });
 
                 draw.startDrawing($('#canvas'), dispatcher, $('#interface'));
                 window.onbeforeunload = function() {
-                    draw.disconnect();
+                    draw.disconnect(); // remove from connected clients list
                 };
             });
         </script>

@@ -15,12 +15,13 @@ var draw = {
     presenter: false, // ensure players cannot perform presenter actions, socket controller will verify for as well for security
     time: 0,
     clock: null,
+    scores: [],
 
     startDrawing: function (c, d, interface) {
         draw = this,
         draw.canvas = c[0];
         draw.channel = d;
-        draw.interface = interface;
+        draw.interface = interface; // interface update events triggered on this observable
         draw.context = c[0].getContext("2d");
 
         // attach event listeners
@@ -40,7 +41,7 @@ var draw = {
         });
 
         draw.channel.bind('client_disconnected', function(data) {
-            console.log('someone left', data);
+
         });
 
         // canvas controls
@@ -49,7 +50,7 @@ var draw = {
             draw.drawLine(draw.context, xy.x, xy.x1, xy.y, xy.y1);
         });
 
-        draw.channel.bind('receive_clear', function(data) {
+        draw.channel.bind('receive_clear', function() {
             draw.clearCanvas();
         });
 
@@ -67,15 +68,29 @@ var draw = {
             draw.clock = setInterval(draw.checkTime, 1000);
         });
 
+        draw.channel.bind('receive_score', function(data) {
+/*            if (typeof draw.scores[data.connection_id + " - "] != 'undefined') {
+                draw.scores[data.connection_id + " - "] += data.score;
+            } else {
+                draw.scores[data.connection_id + " - "] = data.score;
+            }
+            draw.interface.trigger('update_scores', { scores: draw.scores });*/
+        });
+
         draw.channel.bind('receive_item_to_draw', function(data) {
             draw.interface.trigger('presenter', data.item);
             draw.presenter = true;
+        });
+
+        draw.channel.bind('receive_guess', function(data) {
+            draw.interface.trigger('guess', { user: data.user, guess: data.guess, correct: data.correct });
         });
     },
 
     guess: function(guess){
         var message = { guess: guess, connection_id: draw.connectionId }
         draw.channel.trigger('guess', message);
+        draw.interface.trigger('clear_guess');
     },
 
     checkTime: function(){
@@ -83,7 +98,10 @@ var draw = {
         draw.interface.trigger('update_time', draw.time);
         if(draw.time <= 0){
             clearInterval(draw.clock);
-            //draw.clock = setInterval(draw.checkTime, 1000);
+            if(draw.presenter){
+                var message = { connection_id : draw.connectionId };
+                draw.channel.trigger('timer_expired', message);
+            }
         }
     },
 
@@ -120,6 +138,7 @@ var draw = {
     __onMouseDown: function (e) {
         if(!draw.presenter){
             draw.interface.trigger('guess_reminder');
+            return;
         }
         draw.mouseDown = true;
         p = draw.getCursorPosition(e);
@@ -150,6 +169,7 @@ var draw = {
         }
     },
 
+    // sends messages to all canvases to clear themselves
     clear: function(){
         var message = { connection_id : draw.connectionId };
         draw.channel.trigger('broadcast_clear_canvas', message); // clear all canvases
